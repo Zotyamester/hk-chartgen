@@ -1,6 +1,11 @@
+#!/usr/bin/python3
+
+import sys
+
 from openpyxl import load_workbook
 from openpyxl.chart import PieChart, Reference
 from openpyxl.chart.label import DataLabelList
+
 
 def get_answer_distribution_for_question(dataset):
     question = dataset[0]
@@ -18,6 +23,7 @@ def get_answer_distribution_for_question(dataset):
 
     return (question, distribution)
 
+
 def make_charts(inputfile, outputfile):
     workbook = load_workbook(filename=inputfile)
 
@@ -25,7 +31,8 @@ def make_charts(inputfile, outputfile):
 
     columns = [column for column in datasheet.iter_cols(values_only=True)]
 
-    distributions = [get_answer_distribution_for_question(dataset) for dataset in columns]
+    distributions = [get_answer_distribution_for_question(
+        dataset) for dataset in columns]
 
     distsheet = workbook.create_sheet("distributions")
     for question, distribution in distributions:
@@ -38,14 +45,16 @@ def make_charts(inputfile, outputfile):
     for question, distribution in distributions:
         chartsheet = workbook.create_chartsheet('diagram%d' % sheet_idx)
 
-        title_row = row_idx # solely for debug purposes
+        title_row = row_idx  # solely for debug purposes
         entry_count = len(distribution.items())
         first_data_row = row_idx + 1
         last_data_row = row_idx + entry_count
 
         chart = PieChart()
-        labels = Reference(distsheet, min_col=1, min_row=first_data_row, max_row=last_data_row)
-        data = Reference(distsheet, min_col=2, min_row=first_data_row, max_row=last_data_row)
+        labels = Reference(distsheet, min_col=1,
+                           min_row=first_data_row, max_row=last_data_row)
+        data = Reference(distsheet, min_col=2,
+                         min_row=first_data_row, max_row=last_data_row)
         chart.add_data(data)
         chart.set_categories(labels)
         chart.title = question
@@ -60,5 +69,13 @@ def make_charts(inputfile, outputfile):
 
     workbook.save(outputfile)
 
+
 if __name__ == '__main__':
-    make_charts('mock.xlsx', 'analytics.xlsx')
+    inputfile = 'responses.xlsx'
+    if len(sys.argv) > 1:
+        inputfile = sys.argv[1]
+    outputfile = 'analytics.xlsx'
+    if len(sys.argv) > 2:
+        outputfile = sys.argv[2]
+        
+    make_charts(inputfile, outputfile)
